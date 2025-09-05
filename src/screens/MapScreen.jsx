@@ -3,7 +3,8 @@ import { View, StyleSheet, PermissionsAndroid, Platform, ActivityIndicator } fro
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 import { useTheme, Text } from 'react-native-paper';
-import { GOOGLE_MAPS_API_KEY } from '@env'; // Securely import the key
+import { GOOGLE_MAPS_API_KEY } from '@env';
+
 
 const MapScreen = () => {
   const { colors } = useTheme();
