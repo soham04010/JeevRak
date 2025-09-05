@@ -1,0 +1,21 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "src/assets/fonts/CormorantGaramond-Medium.ttf",
+      "sha1": "845742702556d4a2877e8a1d648f9aee78d77495"
+    },
+    {
+      "path": "src/assets/fonts/CormorantGaramond-Regular.ttf",
+      "sha1": "e6f212e20e9b26cfd5efb7b36880c3ad4362094b"
+    },
+    {
+      "path": "src/assets/fonts/Tinos-Bold.ttf",
+      "sha1": "64455f4b98381db03451edc117ae28192a1fd487"
+    },
+    {
+      "path": "src/assets/fonts/Tinos-Regular.ttf",
+      "sha1": "7986131e326593c805a13f9b0087fa52ae5f9c39"
+    }
+  ]
+}
