@@ -16,7 +16,6 @@
     "dotenv": "^17.2.2",
     "react": "19.1.0",
     "react-native": "0.81.1",
-    "react-native-geolocation-service": "^5.3.1",
     "react-native-maps": "^1.26.1",
     "react-native-paper": "^5.14.5",
     "react-native-safe-area-context": "^5.6.1",
