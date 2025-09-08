@@ -34,7 +34,7 @@ export const orderStyles = StyleSheet.create({
         justifyContent: "space-between",
     },
     btn: {
-        backgroundColor: Colors.active,
+        backgroundColor: Colors.primary,
         paddingVertical: 8,
         paddingHorizontal: 16,
     },
