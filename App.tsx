@@ -1,19 +1,8 @@
 import React from 'react';
-import { StatusBar } from 'react-native';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { NavigationContainer } from '@react-navigation/native';
-import { theme } from './src/theme/theme';
-import BottomNavigator from './src/components/BottomNavigator';
+import Navigation from '@components/navigation/Navigation';
 
 const App = () => {
-  return (
-    <PaperProvider theme={theme}>
-      <NavigationContainer>
-        <StatusBar backgroundColor={theme.colors.primary} barStyle="light-content" />
-        <BottomNavigator />
-      </NavigationContainer>
-    </PaperProvider>
-  );
+  return <Navigation />;
 };
 
 export default App;

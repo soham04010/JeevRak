@@ -2,11 +2,12 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 
-const UserAccountScreen = () => {
+const Home = () => {
   const { colors } = useTheme();
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text variant="headlineLarge" style={{ color: colors.primary }}>My Account</Text>
+      <Text variant="headlineLarge" style={{ color: colors.primary }}>JeevRak Home</Text>
+      <Text style={styles.subtitle}>Welcome, Guardian!</Text>
     </View>
   );
 };
@@ -17,6 +18,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  subtitle: {
+    marginTop: 8,
+    fontSize: 18,
+  }
 });
 
-export default UserAccountScreen;
+export default Home;

@@ -12,7 +12,7 @@ export const modalStyles = StyleSheet.create({
         position: 'absolute',
         top: 10,
         right: 10,
-        backgroundColor: Colors.active,
+        backgroundColor: Colors.primary,
         padding: 2,
         borderRadius: 50
     },

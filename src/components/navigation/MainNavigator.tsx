@@ -4,11 +4,11 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useTheme } from 'react-native-paper';
 
 // Import all your screens
-import HomeScreen from '../screens/HomeScreen';
-import ProductScreen from '../screens/ProductScreen';
-import MapScreen from '../screens/MapScreen';
-import ConsultantScreen from '../screens/ConsultantScreen';
-import UserAccountScreen from '../screens/UserAccountScreen';
+import Home from '@modules/Home';
+import Product from '@modules/Product';
+import Map from '@modules/Map';
+import Consultant from '@modules/Consultant';
+import UserAccount from '@modules/UserAccount';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,7 +27,7 @@ const BottomNavigator = () => {
     >
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={Home}
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
@@ -37,7 +37,7 @@ const BottomNavigator = () => {
       />
       <Tab.Screen
         name="Products"
-        component={ProductScreen}
+        component={Product}
         options={{
           tabBarLabel: 'Products',
           tabBarIcon: ({ color, size }) => (
@@ -47,7 +47,7 @@ const BottomNavigator = () => {
       />
       <Tab.Screen
         name="Map"
-        component={MapScreen}
+        component={Map}
         options={{
           tabBarLabel: 'Map',
           tabBarIcon: ({ color, size }) => (
@@ -57,7 +57,7 @@ const BottomNavigator = () => {
       />
       <Tab.Screen
         name="Consultants"
-        component={ConsultantScreen}
+        component={Consultant}
         options={{
           tabBarLabel: 'Consult',
           tabBarIcon: ({ color, size }) => (
@@ -67,7 +67,7 @@ const BottomNavigator = () => {
       />
       <Tab.Screen
         name="Account"
-        component={UserAccountScreen}
+        component={UserAccount}
         options={{
           tabBarLabel: 'Account',
           tabBarIcon: ({ color, size }) => (

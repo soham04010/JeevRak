@@ -3,15 +3,16 @@ import { View, StyleSheet, PermissionsAndroid, Platform, ActivityIndicator } fro
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 import { useTheme, Text } from 'react-native-paper';
+// @ts-ignore
 import { GOOGLE_MAPS_API_KEY } from '@env';
 
 
-const MapScreen = () => {
+const Map = () => {
   const { colors } = useTheme();
-  const [location, setLocation] = useState(null);
-  const [places, setPlaces] = useState([]);
+  const [location, setLocation] = useState<any>(null);
+  const [places, setPlaces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeMap = async () => {
@@ -51,11 +52,32 @@ const MapScreen = () => {
     initializeMap();
   }, []);
 
-  const requestLocationPermission = async () => {
-    // ... (permission logic remains the same)
+  const requestLocationPermission = async (): Promise<boolean> => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission',
+            message: 'This app needs access to your location to show nearby places.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn(err);
+        setErrorMsg('Permission error. Please enable location permission.');
+        return false;
+      }
+    } else {
+      // iOS permissions are handled by the library
+      return true;
+    }
   };
 
-  const fetchNearbyPlaces = async (lat, lon) => {
+  const fetchNearbyPlaces = async (lat: number, lon: number) => {
     // ... (fetching logic remains the same)
   };
 
@@ -108,4 +130,4 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
 });
 
-export default MapScreen;
+export default Map;

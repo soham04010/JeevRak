@@ -8,14 +8,15 @@ export enum FONTS {
   heading2 = "CormorantGaramond-Regular",
 }
 
-export enum Colors {
-  primary = '#FFC201',
-  active = '#1054E8',
-  inactive = '#666',
-  lightText = "#222",
-  background = '#fff',
-  text = '#222',
-}
+export const Colors = {
+  primary: '#2E7D32', // A deep, trustworthy green representing life and nature.
+  secondary: '#FFC107',   // A warm, friendly accent color for buttons and highlights.
+  background: '#F5F5F5', // A slightly off-white background for a clean, soft look.
+  surface: '#FFFFFF',    // Pure white for cards and other surfaces to make them pop.
+  text: '#212121',     // A dark grey for text, which is easier on the eyes than pure black.
+  error: '#B00020',      // A standard error color.
+  onSurface: '#212121', 
+};
 
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
