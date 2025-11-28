@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Image, ActivityIndicator, SafeAreaView } from 'react-native';
-import { useAuth } from '../../context/AuthContext'; // Relative path for robustness
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Image, ActivityIndicator, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { useAuth } from '../../context/AuthContext';
+import Ionicons from 'react-native-vector-icons/Ionicons'; 
 
 const ConsultantScreen: React.FC<any> = ({ navigation }) => {
     const { token, axiosInstance, user } = useAuth();
@@ -12,21 +13,17 @@ const ConsultantScreen: React.FC<any> = ({ navigation }) => {
         if (!token) return;
         setLoading(true);
         try {
-            // Backend endpoint is /users/consultants
             const res = await axiosInstance(token).get(`/users/consultants?search=${search}`);
-            
-            // Filter out the currently logged in user (prevents self-messaging)
             const filtered = res.data.data.filter((c: any) => c._id !== user?._id);
             setConsultants(filtered);
         } catch (e) { 
-            console.error("Consultant fetch error:", e); 
+            console.error(e); 
         } 
         finally { setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token, search, user]);
 
     useEffect(() => {
-        // Debounce search input to avoid hitting the API too frequently
         const timer = setTimeout(() => fetchConsultants(), 500);
         return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -43,26 +40,34 @@ const ConsultantScreen: React.FC<any> = ({ navigation }) => {
                 <Text style={styles.expertise}>{item.expertise?.join(', ')}</Text>
             </View>
             <TouchableOpacity style={styles.chatBtn} onPress={() => navigation.navigate('Chat', { recipient: item })}>
+                <Ionicons name="chatbubble-ellipses-outline" size={20} color="#fff" />
                 <Text style={styles.chatText}>Chat</Text>
             </TouchableOpacity>
         </View>
     );
 
     return (
-        <SafeAreaView style={{flex: 1, backgroundColor: '#f8f9fa'}}>
-            <View style={styles.container}>
-                <TouchableOpacity style={styles.inboxBtn} onPress={() => navigation.navigate('Inbox')}>
-                    <Text style={styles.inboxText}>📂 View Inbox</Text>
+        <SafeAreaView style={styles.safeArea}>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Find a Vet</Text>
+                {/* IMPROVED INBOX BUTTON: Small, clean icon button */}
+                <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Inbox')}>
+                    <Ionicons name="mail-outline" size={24} color="#333" />
                 </TouchableOpacity>
+            </View>
 
-                <Text style={styles.header}>Find a Vet</Text>
-                <TextInput 
-                    style={styles.search} 
-                    placeholder="Search by name or expertise..." 
-                    placeholderTextColor="#999"
-                    value={search}
-                    onChangeText={setSearch} 
-                />
+            <View style={styles.content}>
+                <View style={styles.searchContainer}>
+                    <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+                    <TextInput 
+                        style={styles.search} 
+                        placeholder="Search by name or expertise..." 
+                        placeholderTextColor="#999"
+                        value={search}
+                        onChangeText={setSearch} 
+                    />
+                </View>
+
                 {loading ? <ActivityIndicator size="large" color="#7C4DFF" style={{marginTop: 30}} /> : (
                     <FlatList 
                         data={consultants} 
@@ -78,18 +83,63 @@ const ConsultantScreen: React.FC<any> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8f9fa', padding: 15 },
-    inboxBtn: { backgroundColor: '#FF9800', padding: 12, borderRadius: 10, marginBottom: 15, alignItems: 'center' },
-    inboxText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-    header: { fontSize: 24, fontWeight: 'bold', color: '#333', marginBottom: 15 },
-    search: { backgroundColor: '#fff', padding: 12, borderRadius: 10, marginBottom: 15, fontSize: 16, color: '#000000', elevation: 2 },
-    card: { flexDirection: 'row', backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 12, alignItems: 'center', elevation: 2 },
+    safeArea: {
+        flex: 1, 
+        backgroundColor: '#fff',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+        backgroundColor: '#fff',
+    },
+    headerTitle: { fontSize: 26, fontWeight: 'bold', color: '#333' },
+    iconBtn: { padding: 8, backgroundColor: '#f0f0f0', borderRadius: 20 },
+    
+    content: { flex: 1, backgroundColor: '#f8f9fa', paddingHorizontal: 15, paddingTop: 15 },
+    
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        paddingHorizontal: 15,
+        marginBottom: 15,
+        elevation: 2,
+        height: 50,
+    },
+    searchIcon: { marginRight: 10 },
+    search: { flex: 1, fontSize: 16, color: '#000' },
+
+    card: { 
+        flexDirection: 'row', 
+        backgroundColor: '#fff', 
+        padding: 15, 
+        borderRadius: 16, 
+        marginBottom: 12, 
+        alignItems: 'center', 
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 5
+    },
     avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#eee', marginRight: 15 },
     info: { flex: 1 },
-    name: { fontSize: 16, fontWeight: 'bold', color: '#000000' },
-    expertise: { fontSize: 13, color: '#666' },
-    chatBtn: { backgroundColor: '#7C4DFF', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 20 },
-    chatText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
+    name: { fontSize: 16, fontWeight: 'bold', color: '#000' },
+    expertise: { fontSize: 13, color: '#666', marginTop: 2 },
+    
+    chatBtn: { 
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#7C4DFF', 
+        paddingVertical: 8, 
+        paddingHorizontal: 12, 
+        borderRadius: 20 
+    },
+    chatText: { color: '#fff', fontWeight: 'bold', fontSize: 13, marginLeft: 5 },
     empty: { textAlign: 'center', marginTop: 30, color: '#999' }
 });
 

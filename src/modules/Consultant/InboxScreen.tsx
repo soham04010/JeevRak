@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, SafeAreaView, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, SafeAreaView, RefreshControl, Platform, StatusBar } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons'; 
 
 const InboxScreen: React.FC<any> = ({ navigation }) => {
     const { token, axiosInstance } = useAuth();
@@ -13,7 +14,6 @@ const InboxScreen: React.FC<any> = ({ navigation }) => {
         if (!token) return;
         try {
             const res = await axiosInstance(token).get('/messages/inbox');
-            console.log("Inbox Data:", res.data.data); // DEBUG LOG
             setInbox(res.data.data);
         } catch (e) {
             console.error('Inbox fetch error', e);
@@ -24,7 +24,6 @@ const InboxScreen: React.FC<any> = ({ navigation }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token]);
     
-    // Automatically refresh when screen opens
     useFocusEffect(useCallback(() => {
         fetchInbox();
     }, [fetchInbox]));
@@ -35,7 +34,6 @@ const InboxScreen: React.FC<any> = ({ navigation }) => {
     };
 
     const renderItem = ({ item }: any) => {
-        // Format Date
         const date = new Date(item.sentAt);
         const timeString = date.toLocaleDateString() === new Date().toLocaleDateString() 
             ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
@@ -62,8 +60,11 @@ const InboxScreen: React.FC<any> = ({ navigation }) => {
     };
 
     return (
-        <SafeAreaView style={{flex: 1, backgroundColor: '#f5f5f5'}}>
+        <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: 5, marginRight: 10}}>
+                    <Ionicons name="arrow-back" size={24} color="#000" />
+                </TouchableOpacity>
                 <Text style={styles.headerTitle}>Messages</Text>
             </View>
 
@@ -80,8 +81,9 @@ const InboxScreen: React.FC<any> = ({ navigation }) => {
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7C4DFF']} />}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
+                            <Ionicons name="chatbubbles-outline" size={50} color="#ddd" />
                             <Text style={styles.emptyTitle}>No messages yet</Text>
-                            <Text style={styles.emptyText}>Start a chat with a vet to see it here.</Text>
+                            <Text style={styles.emptyText}>Start a consultation to see your chats here.</Text>
                         </View>
                     }
                 />
@@ -91,15 +93,21 @@ const InboxScreen: React.FC<any> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    safeArea: {
+        flex: 1, 
+        backgroundColor: '#fff',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    },
     header: { 
-        padding: 20, 
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15, 
         backgroundColor: '#fff', 
         borderBottomWidth: 1, 
         borderBottomColor: '#eee',
         elevation: 2 
     },
-    headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#000' },
+    headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#000' },
     loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     
     card: { 
@@ -128,7 +136,7 @@ const styles = StyleSheet.create({
     lastMsg: { fontSize: 14, color: '#666', lineHeight: 20 },
     
     emptyContainer: { alignItems: 'center', marginTop: 100, padding: 20 },
-    emptyTitle: { fontSize: 20, fontWeight: 'bold', color: '#ccc', marginBottom: 10 },
+    emptyTitle: { fontSize: 20, fontWeight: 'bold', color: '#ccc', marginBottom: 10, marginTop: 10 },
     emptyText: { fontSize: 14, color: '#aaa', textAlign: 'center' }
 });
 

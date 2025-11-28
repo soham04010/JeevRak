@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-    View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, ActivityIndicator 
+    View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, ActivityIndicator, StatusBar 
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import Ionicons from 'react-native-vector-icons/Ionicons'; 
@@ -22,23 +22,20 @@ const ChatScreen: React.FC<any> = ({ route, navigation }) => {
                     setLoading(false);
                 })
                 .catch(err => {
-                    console.error('History fetch error', err);
+                    console.error('Error fetching history:', err);
                     setLoading(false);
                 });
         }
 
-        // 2. Socket Listener
+        // 2. Socket Listener for INCOMING messages
         if (socket) {
             const handleMsg = (msg: any) => {
-                // Ensure message belongs to this specific chat
-                if (msg.sender === recipient._id || (msg.sender === user?._id && msg.recipient === recipient._id)) {
-                    // Avoid duplicates (simple check by ID if available, or just length)
-                    setMessages(prev => {
-                        // Very simple dedup: if last message is same text and time, skip
-                        const last = prev[prev.length - 1];
-                        if (last && last.text === msg.text && last.sentAt === msg.sentAt) return prev;
-                        return [...prev, msg];
-                    });
+                // BUG FIX: Ignore messages sent by ME, because I already added them optimistically
+                if (msg.sender === user?._id) return; 
+
+                // Only add messages belonging to this conversation
+                if (msg.sender === recipient._id) {
+                    setMessages(prev => [...prev, msg]);
                 }
             };
             socket.on('message', handleMsg);
@@ -47,35 +44,33 @@ const ChatScreen: React.FC<any> = ({ route, navigation }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [recipient._id, token, socket]);
     
-    // Auto scroll
+    // Auto scroll to bottom
     useEffect(() => {
         const timer = setTimeout(() => {
              flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+        }, 200); // Slight delay helps with layout calculation
         return () => clearTimeout(timer);
     }, [messages]);
 
     const send = () => {
         if (!text.trim()) return;
 
-        // Optimistic Update
-        const tempMsg = {
-            _id: Math.random().toString(),
+        // 3. OPTIMISTIC UPDATE: Show message immediately
+        const newMessage = {
+            _id: Date.now().toString() + Math.random(), // Unique temp ID
             text: text.trim(),
             sender: user?._id,
             recipient: recipient._id,
             sentAt: new Date().toISOString()
         };
-        setMessages(prev => [...prev, tempMsg]);
-        
-        const msgText = text.trim();
-        setText('');
 
-        // Send to server
+        setMessages(prev => [...prev, newMessage]);
+        const msgToSend = text.trim();
+        setText(''); 
+
+        // 4. Send to server
         if (socket && socket.connected) {
-            socket.emit('sendMessage', { recipientId: recipient._id, text: msgText });
-        } else {
-            alert("Connection lost. Message might not be delivered.");
+            socket.emit('sendMessage', { recipientId: recipient._id, text: msgToSend });
         }
     };
 
@@ -94,12 +89,16 @@ const ChatScreen: React.FC<any> = ({ route, navigation }) => {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#EFEFEF' }}>
+        <SafeAreaView style={styles.safeArea}>
+            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={24} color="#333" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{recipient.name}</Text>
+                <View>
+                    <Text style={styles.headerTitle}>{recipient.name}</Text>
+                    <Text style={styles.headerSub}>Online</Text>
+                </View>
                 <View style={{width: 24}} /> 
             </View>
             
@@ -130,7 +129,7 @@ const ChatScreen: React.FC<any> = ({ route, navigation }) => {
                         placeholderTextColor="#999"
                         multiline
                     />
-                    <TouchableOpacity onPress={send} style={styles.sendBtn}>
+                    <TouchableOpacity onPress={send} style={styles.sendBtn} disabled={!text.trim()}>
                         <Ionicons name="send" size={20} color="#fff" />
                     </TouchableOpacity>
                 </View>
@@ -140,11 +139,18 @@ const ChatScreen: React.FC<any> = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#f2f2f2',
+        // FIX: Adds padding for Android Status Bar
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    },
     header: { 
         flexDirection: 'row', 
         alignItems: 'center', 
         justifyContent: 'space-between', 
-        padding: 15, 
+        paddingVertical: 12,
+        paddingHorizontal: 15, 
         backgroundColor: '#fff', 
         elevation: 2, 
         borderBottomWidth: 1, 
@@ -152,6 +158,7 @@ const styles = StyleSheet.create({
     },
     backBtn: { padding: 5 },
     headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#000' },
+    headerSub: { fontSize: 12, color: '#4CAF50', textAlign: 'center' }, // "Online" status
     loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     
     bubbleWrapper: { marginBottom: 12, maxWidth: '80%' },
