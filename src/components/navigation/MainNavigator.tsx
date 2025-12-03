@@ -7,8 +7,8 @@ import { useTheme } from 'react-native-paper';
 import Home from '@modules/Home';
 import Product from '@modules/Product';
 import Map from '@modules/Map';
-import Consultant from '@modules/Consultant';
-import UserAccount from '@modules/UserAccount';
+import Consultant from '@modules/Consultant/ConsultantScreen';
+import UserAccount from '@modules/UserAccount/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
