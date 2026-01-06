@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
     View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, SafeAreaView
 } from 'react-native';
-import axios from 'axios'; 
+import axios from 'axios'; // <--- ADDED THIS IMPORT
 // Check this path matches where your AuthContext is located
 import { useAuth } from '../../context/AuthContext'; 
 import { pickImage, createFormData } from '../../utils/fileUtils';
