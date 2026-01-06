@@ -3,20 +3,24 @@ import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native'; 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../context/AuthContext'; // Access the token
+import { useAuth } from '../context/AuthContext'; 
 
-// Import Screens using aliases (easier to read)
+// Import Screens
 import AuthScreen from '@modules/Auth/AuthScreen';
 import ChatScreen from '@modules/Consultant/ChatScreen';
 import InboxScreen from '@modules/Consultant/InboxScreen';
 import MainNavigator from '@components/navigation/MainNavigator';
+
+// Missing Product Related Screens
+import AddProductScreen from '@modules/Product/AddProductScreen';
+import CartScreen from '@modules/Product/CartScreen';
+import ProductDetailScreen from '@modules/Product/ProductDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
 const RootNavigator: React.FC = () => {
   const { token, isLoading } = useAuth();
 
-  // 1. While checking if user is logged in, show loading screen
   if (isLoading) {
     return (
         <SafeAreaView style={styles.loadingContainer}>
@@ -29,14 +33,17 @@ const RootNavigator: React.FC = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
         {token ? (
-            // 2. IF LOGGED IN: Show the Main App
             <>
                 <Stack.Screen name="MainTabs" component={MainNavigator} />
                 <Stack.Screen name="Chat" component={ChatScreen} />
                 <Stack.Screen name="Inbox" component={InboxScreen} /> 
+                
+                {/* REGISTER MISSING SCREENS HERE */}
+                <Stack.Screen name="AddProduct" component={AddProductScreen} />
+                <Stack.Screen name="Cart" component={CartScreen} />
+                <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
             </>
         ) : (
-            // 3. IF NOT LOGGED IN: Show the Auth Screen (Login/Signup)
             <Stack.Screen name="Auth" component={AuthScreen} />
         )}
     </Stack.Navigator>

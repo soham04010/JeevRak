@@ -2,20 +2,20 @@ import React, { createContext, useState, useEffect, useContext, useMemo, useRef 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import io, { Socket } from 'socket.io-client';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
 // --- CONFIGURATION ---
-// 10.0.2.2 for Android Emulator. 
+// 10.0.2.2 is the GLOBAL bridge IP for Android Emulators to reach your PC.
+// 'localhost' is for iOS. 
+// No more manual IP changes!
 const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000';
 const API_URL = `${BASE_URL}/api`;
-// ---------------------
 
 interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'user' | 'consultant';
+  role: 'admin'|'user' | 'consultant';
   profilePicture: string;
   expertise: string[];
   bio: string;
@@ -49,34 +49,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
-  // --- SOCKET CONNECTION LOGIC ---
   const connectSocket = (authToken: string) => {
     if (!authToken || socketRef.current?.connected) return;
-    
-    // Initialize Socket
     socketRef.current = io(BASE_URL, {
       transports: ['websocket'],
       autoConnect: true,
       forceNew: true,
     });
-
-    // Event Listeners
     socketRef.current.on('connect', () => {
-        console.log('Socket Connected:', socketRef.current?.id);
-        
-        // --- CRITICAL FIX START ---
-        // We MUST send this event so the backend knows who we are.
-        // Without this, the backend variables 'authUserId' stays null.
         socketRef.current?.emit('authenticate', { token: authToken });
-        // --- CRITICAL FIX END ---
-    });
-
-    socketRef.current.on('disconnect', () => {
-      console.log('Socket Disconnected');
-    });
-    
-    socketRef.current.on('connect_error', (err) => {
-        console.log('Socket Connection Error:', err);
     });
   };
 
@@ -93,8 +74,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await AsyncStorage.setItem('userData', JSON.stringify(newUser));
         setToken(newToken);
         setUser(newUser);
-        
-        // Connect to socket immediately after login/signup
         connectSocket(newToken);
     } catch (e) {
         console.error('Save Data Error', e);
@@ -106,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await axios.post(`${API_URL}/auth/login`, { email, password });
       await saveAuthData(res.data.token, res.data.user);
     } catch (error: any) {
-      const msg = error.response?.data?.error || (error.code === 'ERR_NETWORK' ? 'Connection Error. Is the backend running?' : 'Login failed.');
+      const msg = error.response?.data?.error || 'Login failed.';
       throw new Error(msg);
     }
   };
@@ -116,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await axios.post(`${API_URL}/auth/register`, formData);
       await saveAuthData(res.data.token, res.data.user);
     } catch (error: any) {
-      const msg = error.response?.data?.error || (error.code === 'ERR_NETWORK' ? 'Connection Error. Is the backend running?' : 'Registration failed.');
+      const msg = error.response?.data?.error || 'Registration failed.';
       throw new Error(msg);
     }
   };
@@ -159,16 +138,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     setUser,
     axiosInstance
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [user, token, isLoading, socketRef.current]);
+  }), [user, token, isLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
