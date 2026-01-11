@@ -1,133 +1,165 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, PermissionsAndroid, Platform, ActivityIndicator } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import Geolocation from 'react-native-geolocation-service';
-import { useTheme, Text } from 'react-native-paper';
-// @ts-ignore
-import { GOOGLE_MAPS_API_KEY } from '@env';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+    View, Text, StyleSheet, Dimensions, FlatList, TouchableOpacity, ActivityIndicator, Linking, Platform 
+} from 'react-native';
+import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
+import GetLocation from 'react-native-get-location';
+import { useAuth } from '../../context/AuthContext';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
+const { width, height } = Dimensions.get('window');
 
-const Map = () => {
-  const { colors } = useTheme();
-  const [location, setLocation] = useState<any>(null);
-  const [places, setPlaces] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+const MapScreen: React.FC = () => {
+    const { token, axiosInstance } = useAuth();
+    const mapRef = useRef<MapView>(null);
 
-  useEffect(() => {
-    const initializeMap = async () => {
-      if (!GOOGLE_MAPS_API_KEY) {
-        setErrorMsg('API Key is missing. Please check your .env file.');
-        setLoading(false);
-        return;
-      }
-      
-      const hasPermission = await requestLocationPermission();
-      if (!hasPermission) {
-        setLoading(false);
-        return;
-      }
+    const [location, setLocation] = useState<any>(null);
+    const [places, setPlaces] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedPlace, setSelectedPlace] = useState<any>(null);
 
-      Geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const userLocation = {
-            latitude,
-            longitude,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          };
-          setLocation(userLocation);
-          fetchNearbyPlaces(latitude, longitude);
-        },
-        (error) => {
-          console.error(error);
-          setErrorMsg('Could not get your location. Please ensure GPS is enabled.');
-          setLoading(false);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
-      );
+    useEffect(() => {
+        getCurrentLocation();
+    }, []);
+
+    const getCurrentLocation = async () => {
+        try {
+            const loc = await GetLocation.getCurrentPosition({
+                enableHighAccuracy: true,
+                timeout: 15000,
+            });
+            setLocation(loc);
+            fetchNearby(loc.latitude, loc.longitude);
+        } catch (error) {
+            console.warn("Location error:", error);
+            setLoading(false);
+        }
     };
 
-    initializeMap();
-  }, []);
+    const fetchNearby = async (lat: number, lng: number) => {
+        try {
+            const res = await axiosInstance(token!).get(`/nearby?lat=${lat}&lng=${lng}`);
+            setPlaces(res.data.data);
+        } catch (error) {
+            console.error("Fetch Error", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const requestLocationPermission = async (): Promise<boolean> => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Location Permission',
-            message: 'This app needs access to your location to show nearby places.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          },
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        console.warn(err);
-        setErrorMsg('Permission error. Please enable location permission.');
-        return false;
-      }
-    } else {
-      // iOS permissions are handled by the library
-      return true;
-    }
-  };
+    const handlePlaceSelect = (place: any) => {
+        setSelectedPlace(place);
+        mapRef.current?.animateToRegion({
+            latitude: place.location.lat,
+            longitude: place.location.lng,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+        }, 1000);
+    };
 
-  const fetchNearbyPlaces = async (lat: number, lon: number) => {
-    // ... (fetching logic remains the same)
-  };
+    const openNavigation = (lat: number, lng: number, name: string) => {
+        const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
+        const latLng = `${lat},${lng}`;
+        const url = Platform.select({
+            ios: `${scheme}${name}@${latLng}`,
+            android: `${scheme}${latLng}(${name})`
+        });
+        if (url) Linking.openURL(url);
+    };
 
-  if (loading) {
+    if (loading) return (
+        <View style={styles.center}>
+            <ActivityIndicator size="large" color="#7C4DFF" />
+            <Text style={{marginTop: 10, color: '#666'}}>Scanning your area...</Text>
+        </View>
+    );
+
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ marginTop: 10 }}>Loading Map & Services...</Text>
-      </View>
-    );
-  }
-  
-  if (errorMsg) {
-     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Text style={{color: 'red', textAlign: 'center'}}>{errorMsg}</Text>
-      </View>
-    );
-  }
+        <View style={styles.container}>
+            <MapView
+                ref={mapRef}
+                provider={PROVIDER_GOOGLE}
+                style={styles.map}
+                initialRegion={{
+                    latitude: location?.latitude || 20.5937,
+                    longitude: location?.longitude || 78.9629,
+                    latitudeDelta: 0.05,
+                    longitudeDelta: 0.05,
+                }}
+                showsUserLocation={true}
+            >
+                {places.map((place: any) => (
+                    <Marker
+                        key={place.id}
+                        coordinate={{ latitude: place.location.lat, longitude: place.location.lng }}
+                        onPress={() => setSelectedPlace(place)}
+                    >
+                        <View style={[styles.pin, { backgroundColor: place.type === 'Clinic' ? '#FF5252' : '#7C4DFF' }]}>
+                            <Ionicons name={place.type === 'Clinic' ? "medical" : "cart"} size={16} color="white" />
+                        </View>
+                        <Callout onPress={() => openNavigation(place.location.lat, place.location.lng, place.name)}>
+                            <View style={styles.callout}>
+                                <Text style={styles.calloutTitle}>{place.name}</Text>
+                                <Text style={styles.calloutDesc}>Tap to navigate</Text>
+                            </View>
+                        </Callout>
+                    </Marker>
+                ))}
+            </MapView>
 
-  return (
-    <View style={styles.container}>
-      <MapView
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        initialRegion={location}
-        showsUserLocation={true}
-        showsMyLocationButton={true}
-      >
-        {places.map((place) => (
-          <Marker
-            key={place.place_id}
-            coordinate={{
-              latitude: place.geometry.location.lat,
-              longitude: place.geometry.location.lng,
-            }}
-            title={place.name}
-            description={place.vicinity}
-            pinColor={place.types.includes('veterinary_care') ? 'tan' : 'orange'}
-          />
-        ))}
-      </MapView>
-    </View>
-  );
+            <View style={styles.listContainer}>
+                <Text style={styles.listHeader}>Nearest Services</Text>
+                <FlatList
+                    horizontal
+                    data={places}
+                    keyExtractor={(item) => item.id}
+                    showsHorizontalScrollIndicator={false}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity 
+                            style={[styles.card, selectedPlace?.id === item.id && styles.selectedCard]}
+                            onPress={() => handlePlaceSelect(item)}
+                        >
+                            <Text style={[styles.cardType, {color: item.type === 'Clinic' ? '#FF5252' : '#7C4DFF'}]}>
+                                {item.type.toUpperCase()}
+                            </Text>
+                            <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
+                            <Text style={styles.cardAddr} numberOfLines={1}>{item.address}</Text>
+                            <View style={styles.ratingRow}>
+                                <Ionicons name="star" size={14} color="#FFD700" />
+                                <Text style={styles.ratingText}>{item.rating || 'N/A'}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    )}
+                />
+            </View>
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  map: { ...StyleSheet.absoluteFillObject },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+    container: { flex: 1 },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    map: { width: width, height: height * 0.7 },
+    pin: { padding: 6, borderRadius: 20, borderWidth: 2, borderColor: 'white', elevation: 5 },
+    callout: { padding: 5, minWidth: 100 },
+    calloutTitle: { fontWeight: 'bold', fontSize: 12 },
+    calloutDesc: { fontSize: 10, color: '#7C4DFF', marginTop: 2 },
+    listContainer: {
+        position: 'absolute', bottom: 0, backgroundColor: 'white', 
+        width: width, height: height * 0.3, borderTopLeftRadius: 30, borderTopRightRadius: 30,
+        padding: 20, elevation: 20
+    },
+    listHeader: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#333' },
+    card: {
+        backgroundColor: '#f8f9fa', width: 240, height: 110, borderRadius: 15,
+        padding: 15, marginRight: 15, borderWidth: 1, borderColor: '#eee'
+    },
+    selectedCard: { borderColor: '#7C4DFF', backgroundColor: '#F3E5F5' },
+    cardType: { fontSize: 10, fontWeight: '800', marginBottom: 5 },
+    cardName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+    cardAddr: { fontSize: 12, color: '#777', marginTop: 2 },
+    ratingRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+    ratingText: { marginLeft: 5, fontSize: 12, fontWeight: '600', color: '#444' }
 });
 
-export default Map;
+export default MapScreen;
