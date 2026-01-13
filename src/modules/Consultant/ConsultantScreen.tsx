@@ -32,7 +32,7 @@ const ConsultantScreen: React.FC<any> = ({ navigation }) => {
     const renderItem = ({ item }: any) => (
         <View style={styles.card}>
             <Image 
-                source={{ uri: item.profilePicture || 'https://placehold.co/400x400/CCCCCC/000000?text=Profile' }} 
+                source={{ uri: item.profilePicture || 'default-user' }} 
                 style={styles.avatar} 
             />
             <View style={styles.info}>

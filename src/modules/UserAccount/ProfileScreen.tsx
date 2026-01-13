@@ -14,7 +14,7 @@ const ProfileScreen: React.FC = () => {
     const [name, setName] = useState(user?.name || '');
     const [bio, setBio] = useState(user?.bio || '');
     const [expertise, setExpertise] = useState(user?.expertise?.join(', ') || '');
-    const [imageUri, setImageUri] = useState(user?.profilePicture || 'https://placehold.co/400x400/CCCCCC/000000?text=Profile');
+    const [imageUri, setImageUri] = useState(user?.profilePicture || 'default-user');
     const [loading, setLoading] = useState(false);
     
     const isConsultant = user?.role === 'consultant';
