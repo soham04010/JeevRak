@@ -6,7 +6,7 @@ import { useTheme } from 'react-native-paper';
 // Import all your screens
 import Home from '@modules/Home';
 import Product from '@modules/Product';
-import Map from '@modules/Map';
+// import Map from '@modules/Map';
 import Consultant from '@modules/Consultant/ConsultantScreen';
 import UserAccount from '@modules/UserAccount/ProfileScreen';
 
@@ -45,7 +45,7 @@ const BottomNavigator = () => {
           ),
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Map"
         component={Map}
         options={{
@@ -54,7 +54,7 @@ const BottomNavigator = () => {
             <MaterialCommunityIcons name="map-marker-outline" color={color} size={size} />
           ),
         }}
-      />
+      /> */}
       <Tab.Screen
         name="Consultants"
         component={Consultant}
