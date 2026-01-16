@@ -1,16 +1,17 @@
-import 'react-native-gesture-handler';
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/context/AuthContext';
-import { CartProvider } from './src/context/CartContext'; // Ensure this matches the file above
+import { CartProvider } from './src/context/CartContext';
+import { NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 
-const App: React.FC = () => {
+const App = () => {
   return (
     <SafeAreaProvider>
+      {/* 1. AuthProvider First so user data is available */}
       <AuthProvider>
-        <CartProvider> 
+        {/* 2. CartProvider Second so it can use 'user' from AuthProvider */}
+        <CartProvider>
           <NavigationContainer>
             <RootNavigator />
           </NavigationContainer>
