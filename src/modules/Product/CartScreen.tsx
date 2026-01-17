@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, ScrollView, SafeAreaView, Alert 
@@ -9,37 +9,48 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const CartScreen: React.FC = () => {
     const { state, removeFromCart, clearCart } = useCart();
-    const { token, axiosInstance } = useAuth();
-    const [address, setAddress] = useState('');
-    const [city, setCity] = useState('');
-    const [postalCode, setPostalCode] = useState('');
-    const [mobile, setMobile] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('COD'); // Default COD
+    const { token, axiosInstance, user } = useAuth();
+    
+    // State to hold selected address
+    const [selectedAddress, setSelectedAddress] = useState<any>(null);
+    const [mobile, setMobile] = useState(user?.mobile || '');
+    const [paymentMethod, setPaymentMethod] = useState('COD');
+
+    // Automatically select default address or first address on load
+    useEffect(() => {
+        if (user?.addresses && user.addresses.length > 0) {
+            const def = user.addresses.find((a: any) => a.isDefault) || user.addresses[0];
+            setSelectedAddress(def);
+        }
+        if (user?.mobile) setMobile(user.mobile);
+    }, [user]);
 
     const totalPrice = state.cartItems.reduce((acc, item) => acc + item.qty * item.price, 0);
 
     const handleCheckout = async () => {
-        if (!address || !city || !mobile) {
-            return Alert.alert('Missing Info', 'Please fill in all address details.');
+        if (!selectedAddress || !mobile) {
+            return Alert.alert('Missing Info', 'Please select an address and ensure mobile number is set.');
         }
 
         try {
             const orderData = {
                 orderItems: state.cartItems,
-                shippingAddress: { address, city, postalCode, country: 'India', mobile },
+                shippingAddress: { 
+                    address: selectedAddress.address, 
+                    city: selectedAddress.city, 
+                    postalCode: selectedAddress.postalCode, 
+                    country: 'India', 
+                    mobile 
+                },
                 paymentMethod,
-                itemsPrice: totalPrice,
-                taxPrice: 0,
-                shippingPrice: 0,
                 totalPrice: totalPrice
             };
 
-            await axiosInstance(token!).post('/orders', orderData);
+            const baseURL = axiosInstance(token!).defaults.baseURL;
+            await axiosInstance(token!).post(`${baseURL}/orders`, orderData);
             
             clearCart();
-            Alert.alert('Order Placed!', 'Your order has been placed successfully.', [
-                { text: 'OK' } 
-            ]);
+            Alert.alert('Order Placed!', 'Success!');
         } catch (error) {
             Alert.alert('Error', 'Failed to place order.');
         }
@@ -57,7 +68,7 @@ const CartScreen: React.FC = () => {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <ScrollView contentContainerStyle={{ padding: 20 }}>
-                <Text style={styles.title}>Shopping Cart</Text>
+                <Text style={styles.title}>Review Order</Text>
                 
                 {/* Items */}
                 {state.cartItems.map((item) => (
@@ -73,35 +84,63 @@ const CartScreen: React.FC = () => {
                     </View>
                 ))}
 
-                {/* Shipping Form */}
-                <Text style={styles.sectionTitle}>Shipping Details</Text>
-                <TextInput style={styles.input} placeholder="Address" value={address} onChangeText={setAddress} placeholderTextColor="#999" />
-                <TextInput style={styles.input} placeholder="City" value={city} onChangeText={setCity} placeholderTextColor="#999" />
-                <TextInput style={styles.input} placeholder="Postal Code" value={postalCode} onChangeText={setPostalCode} keyboardType="numeric" placeholderTextColor="#999" />
-                <TextInput style={styles.input} placeholder="Mobile Number" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" placeholderTextColor="#999" />
+                {/* Address Selection */}
+                <Text style={styles.sectionTitle}>Deliver To</Text>
+                {user?.addresses && user.addresses.length > 0 ? (
+                    user.addresses.map((addr: any, idx: number) => (
+                        <TouchableOpacity 
+                            key={idx} 
+                            style={[styles.addressCard, selectedAddress?._id === addr._id && styles.selectedCard]}
+                            onPress={() => setSelectedAddress(addr)}
+                        >
+                            <Ionicons 
+                                name={selectedAddress?._id === addr._id ? "radio-button-on" : "radio-button-off"} 
+                                size={20} 
+                                color={selectedAddress?._id === addr._id ? "#7C4DFF" : "#999"} 
+                            />
+                            <View style={{marginLeft: 10}}>
+                                <Text style={styles.addrText}>{addr.address}</Text>
+                                <Text style={styles.cityText}>{addr.city}, {addr.postalCode}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    ))
+                ) : (
+                    <Text style={{color: 'red', marginBottom: 10}}>No saved addresses. Please add one in Profile.</Text>
+                )}
 
-                {/* Payment Selection */}
-                <Text style={styles.sectionTitle}>Payment Method</Text>
+                <Text style={styles.sectionTitle}>Contact Number</Text>
+                <TextInput 
+                    style={styles.input} 
+                    value={mobile} 
+                    onChangeText={setMobile} 
+                    keyboardType="phone-pad" 
+                    placeholder="Mobile Number"
+                />
+
+                <Text style={styles.sectionTitle}>Payment</Text>
                 <View style={styles.paymentRow}>
                     <TouchableOpacity 
                         style={[styles.payOption, paymentMethod === 'COD' && styles.selectedPay]} 
                         onPress={() => setPaymentMethod('COD')}
                     >
-                        <Text style={paymentMethod === 'COD' ? styles.payTextSelected : styles.payText}>Cash on Delivery</Text>
+                        <Text style={paymentMethod === 'COD' ? styles.payTextSelected : styles.payText}>COD</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                         style={[styles.payOption, paymentMethod === 'Online' && styles.selectedPay]} 
                         onPress={() => setPaymentMethod('Online')}
                     >
-                        <Text style={paymentMethod === 'Online' ? styles.payTextSelected : styles.payText}>Online (Stripe/Razorpay)</Text>
+                        <Text style={paymentMethod === 'Online' ? styles.payTextSelected : styles.payText}>Online</Text>
                     </TouchableOpacity>
                 </View>
 
-                {/* Summary */}
                 <View style={styles.summary}>
                     <Text style={styles.totalText}>Total: ₹{totalPrice}</Text>
-                    <TouchableOpacity style={styles.placeBtn} onPress={handleCheckout}>
-                        <Text style={styles.placeText}>Place Order</Text>
+                    <TouchableOpacity 
+                        style={[styles.placeBtn, !selectedAddress && {backgroundColor: '#ccc'}]} 
+                        onPress={handleCheckout}
+                        disabled={!selectedAddress}
+                    >
+                        <Text style={styles.placeText}>Confirm Order</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -112,20 +151,24 @@ const CartScreen: React.FC = () => {
 const styles = StyleSheet.create({
     emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     emptyText: { fontSize: 18, color: '#999', marginTop: 10 },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#333' },
+    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
     item: { flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: '#f9f9f9', padding: 10, borderRadius: 10 },
     image: { width: 50, height: 50, borderRadius: 5 },
-    name: { fontSize: 16, fontWeight: '600', color: '#333' },
+    name: { fontSize: 16, fontWeight: '600' },
     price: { color: '#4CAF50', fontWeight: 'bold' },
-    sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 10, color: '#333' },
-    input: { backgroundColor: '#f0f0f0', padding: 12, borderRadius: 8, marginBottom: 10, color: '#000' },
-    paymentRow: { flexDirection: 'row', justifyContent: 'space-between' },
-    payOption: { flex: 1, padding: 15, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, alignItems: 'center', marginHorizontal: 5 },
+    sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 10 },
+    addressCard: { flexDirection: 'row', padding: 15, borderBasis: 1, borderColor: '#ddd', borderWidth: 1, borderRadius: 12, marginBottom: 8, alignItems: 'center' },
+    selectedCard: { borderColor: '#7C4DFF', backgroundColor: '#F3E5F5' },
+    addrText: { fontWeight: 'bold', color: '#333' },
+    cityText: { fontSize: 12, color: '#666' },
+    input: { backgroundColor: '#f0f0f0', padding: 12, borderRadius: 8, marginBottom: 10 },
+    paymentRow: { flexDirection: 'row', gap: 10 },
+    payOption: { flex: 1, padding: 12, borderBasis: 1, borderColor: '#ddd', borderWidth: 1, borderRadius: 8, alignItems: 'center' },
     selectedPay: { backgroundColor: '#7C4DFF', borderColor: '#7C4DFF' },
     payText: { color: '#333' },
     payTextSelected: { color: '#fff', fontWeight: 'bold' },
     summary: { marginTop: 30, borderTopWidth: 1, borderColor: '#eee', paddingTop: 20 },
-    totalText: { fontSize: 22, fontWeight: 'bold', textAlign: 'right', marginBottom: 15, color: '#333' },
+    totalText: { fontSize: 22, fontWeight: 'bold', textAlign: 'right', marginBottom: 15 },
     placeBtn: { backgroundColor: '#4CAF50', padding: 18, borderRadius: 12, alignItems: 'center' },
     placeText: { color: '#fff', fontSize: 20, fontWeight: 'bold' }
 });
