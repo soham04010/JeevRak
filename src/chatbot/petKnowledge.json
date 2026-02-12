@@ -1,0 +1,126 @@
+[
+    {
+        "keywords": [
+            "hello",
+            "hi",
+            "hey",
+            "hola",
+            "namaste",
+            "kem cho"
+        ],
+        "answer": "Hello! I am your JeevRak pet assistant. How can I help you today? 🐾"
+    },
+    {
+        "keywords": [
+            "food",
+            "diet",
+            "nutrition",
+            "eat",
+            "feeding"
+        ],
+        "answer": "A balanced diet is key! Dogs need protein, healthy fats, and fiber. Avoid chocolate, onions, and grapes. For cats, ensure high protein and taurine. Always provide fresh water! 🍖"
+    },
+    {
+        "keywords": [
+            "vaccination",
+            "shot",
+            "injection",
+            "vaccine"
+        ],
+        "answer": "Core vaccines for dogs include Rabies, DHPP (Distemper, Hepatitis, Parvovirus, Parainfluenza). For cats: Rabies, FVRCP. Consult your vet for a schedule! 💉"
+    },
+    {
+        "keywords": [
+            "grooming",
+            "bath",
+            "wash",
+            "brush",
+            "clean"
+        ],
+        "answer": "Regular grooming keeps your pet healthy! Brush dogs weekly, bathe monthly or as needed. Cats self-clean but need brushing to prevent hairballs. Trim nails regularly! 🛁"
+    },
+    {
+        "keywords": [
+            "exercise",
+            "walk",
+            "play",
+            "activity",
+            "run"
+        ],
+        "answer": "Exercise depends on breed and age. Dogs generally need 30-60 mins daily walks. Cats enjoy interactive play with toys. It keeps them fit and happy! 🎾"
+    },
+    {
+        "keywords": [
+            "flea",
+            "tick",
+            "parasite",
+            "itch",
+            "scratch"
+        ],
+        "answer": "Fleas and ticks can cause disease. Use vet-approved prevention (collars, drops, pills). Check your pet's fur regularly, especially after outdoor walks. 🐜"
+    },
+    {
+        "keywords": [
+            "emergency",
+            "sick",
+            "vomit",
+            "blood",
+            "poison"
+        ],
+        "answer": "If your pet is lethargic, vomiting, bleeding, or ate something toxic, visit a vet IMMEDIATELY. Better safe than sorry! 🚑"
+    },
+    {
+        "keywords": [
+            "training",
+            "behavior",
+            "sit",
+            "stay",
+            "bark"
+        ],
+        "answer": "Positive reinforcement works best! Use treats and praise. Be consistent and patient. For behavioral issues, consult a professional trainer. 🎓"
+    },
+    {
+        "keywords": [
+            "social",
+            "socialization",
+            "friends",
+            "meet"
+        ],
+        "answer": "Early socialization helps pets be confident. Expose them to different people, pets, and sounds gradually in a positive way. 🐕‍🦺"
+    },
+    {
+        "keywords": [
+            "neuter",
+            "spay",
+            "fix",
+            "desex"
+        ],
+        "answer": "Spaying/neutering prevents unwanted litters and health issues like certain cancers. Consult your vet for the best age to do this. 🏥"
+    },
+    {
+        "keywords": [
+            "dental",
+            "teeth",
+            "breath",
+            "tooth"
+        ],
+        "answer": "Dental health is vital! Brush teeth regularly with pet-safe paste. Dental chews and professional cleanings help prevent gum disease. 🦷"
+    },
+    {
+        "keywords": [
+            "sleep",
+            "bed",
+            "rest",
+            "nap"
+        ],
+        "answer": "Pets sleep a lot! Dogs: 12-14 hours, Cats: 12-16 hours. Provide a comfortable, quiet bed for quality rest. 💤"
+    },
+    {
+        "keywords": [
+            "name",
+            "who are you",
+            "bot"
+        ],
+        "answer": "I am the JeevRak Chatbot, here to answer your pet care questions! 🤖"
+    }
+]
